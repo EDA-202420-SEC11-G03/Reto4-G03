@@ -1,6 +1,7 @@
 import time
 from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import adj_list_graph as al
+from DataStructures.List import array_list as ar
 import csv
 def new_logic():
     """
@@ -37,10 +38,15 @@ def load_data(catalog, filename1, filename2):
             numpremium+=1
         numusuarios+=1
         usuario["seguidores"]=0
+        usuario["lista de seguidores"]= ar.new_list()
+        usuario["personas que sigue"]= ar.new_list()
         for conexion in conexiones:
             if float(usuario["USER_ID"])== float(conexion["FOLLOWED_ID"]):
                 usuario["seguidores"]+=1
-            
+                ar.add_last(usuario["lista de seguidores"], conexion["FOLLOWER_ID"])
+            elif float(usuario["USER_ID"])== float(conexion["FOLLOWER_ID"]): 
+                ar.add_last(usuario["personas que sigue"],conexion["FOLLOWED_ID"])
+         
     for usuario in info:
         prom+=usuario["seguidores"]
         dicnumciudades[usuario["CITY"]]+=1
