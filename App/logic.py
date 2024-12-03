@@ -30,7 +30,6 @@ def load_data(catalog, filename1, filename2):
     dicnumciudades = {}
     prom=0
     for usuario in info:
-        print(usuario)
         dicnumciudades[usuario["CITY"]]=0
         if usuario["USER_TYPE"]=="basic":
             numbasic+=1
@@ -39,8 +38,9 @@ def load_data(catalog, filename1, filename2):
         numusuarios+=1
         usuario["seguidores"]=0
         for conexion in conexiones:
-            if usuario["USER_ID"]== conexion["FOLLOWED_ID"]:
+            if float(usuario["USER_ID"])== float(conexion["FOLLOWED_ID"]):
                 usuario["seguidores"]+=1
+            
     for usuario in info:
         prom+=usuario["seguidores"]
         dicnumciudades[usuario["CITY"]]+=1
