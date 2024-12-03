@@ -55,7 +55,7 @@ def add_edge(graph, vertex_a, vertex_b, weight=0):
     return graph
 
 def edges(my_graph):
-    a =  mp.varue_set(my_graph['vertices'])
+    a =  mp.value_set(my_graph['vertices'])
     re = ar.new_list()
     for i in a['elements']:
         for j in i['elements']:
