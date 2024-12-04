@@ -117,21 +117,29 @@ def req_5(catalog, id, amigos):
     Retorna el resultado del requerimiento 5
     """
     # TODO: Modificar el requerimiento 5
-    info = mp.get(catalog["info"], float(id))
+    info = mp.get(catalog["conexiones"]["vertices"], float(id))
     
     i=0
     lista = ar.new_list()
     listaamigos = ar.new_list()
-    for seguido in info["personas que sigue"]["elements"]:
-        if seguido in info["lista de seguidores"]["elements"]:
-            ar.add_last(listaamigos, seguido)
+    
+    
+    for seguido in info["elements"]:
+        id_seguido = seguido["vertex_b"]
+        seguidosseguidor =  mp.get(catalog["conexiones"]["vertices"], id_seguido)
+        for seguido2 in seguidosseguidor["elements"]:
+            if seguido2["vertex_b"]== float(id):
+                ar.add_last(listaamigos, id_seguido)
+
+        
+    
 
     while lista["size"]<= float(amigos) and i< listaamigos["size"]:
          
-        infoseguido = mp.get(catalog["info"], float(listaamigos["elements"][i]))
-        if infoseguido["personas que sigue"]["size"]>1:
-
-            dicseguido = {"id": infoseguido["USER_ID"], "nombre": infoseguido["USER_NAME"], "seguidores": infoseguido["seguidores"]}
+        infoamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])
+        if infoamigo["size"]>1:
+            amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
+            dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": al.in_degree(catalog["conexiones"], listaamigos["elements"][i])}
             ar.add_last(lista, dicseguido)
         i+=1        
     return lista
