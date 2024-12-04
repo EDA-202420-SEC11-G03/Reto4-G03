@@ -114,7 +114,7 @@ def req_5(catalog, id, amigos):
         if seguido in info["lista de seguidores"]["elements"]:
             ar.add_last(listaamigos, seguido)
 
-    while i <= float(amigos) and i< listaamigos["size"]:
+    while lista["size"]<= float(amigos) and i< listaamigos["size"]:
          
         infoseguido = mp.get(catalog["info"], float(listaamigos["elements"][i]))
         if infoseguido["personas que sigue"]["size"]>1:
