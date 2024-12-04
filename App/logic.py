@@ -18,7 +18,7 @@ def load_data(catalog, filename1, filename2):
     Carga los datos del reto
     """
     # TODO: Realizar la carga de datos
-    with open(filename1, mode='r', encoding='utf-8') as file:
+    with open(filename1, mode='r', encoding='latin-1') as file:
         reader = csv.DictReader(file, delimiter=';')
         info = [row for row in reader]
     with open(filename2, mode='r', encoding='utf-8') as file:
@@ -38,6 +38,7 @@ def load_data(catalog, filename1, filename2):
             numpremium+=1
         numusuarios+=1
         usuario["seguidores"]=0
+        usuario
         usuario["lista de seguidores"]= ar.new_list()
         usuario["personas que sigue"]= ar.new_list()
         for conexion in conexiones:
@@ -84,12 +85,30 @@ def req_2(catalog):
     pass
 
 
-def req_3(catalog):
+def req_3(catalog, id): #Implementado por Nicorodv
     """
     Retorna el resultado del requerimiento 3
     """
-    # TODO: Modificar el requerimiento 3
-    pass
+    info_user = mp.get(catalog["info"], float(id))
+    amigos = ar.new_list()
+    amigo_mas_seguido = ()
+    mayor_following = 0
+    
+    for usuario in info_user["personas que sigue"]["elements"]:
+        if usuario in info_user["lista de seguidores"]["elements"]:
+            ar.add_last(amigos, usuario)
+            
+    for amigo in amigos["elements"]:
+        for i in catalog["info"]["table"]["elements"]:
+            if float(amigo) == i["key"]:   
+                if i["value"]["seguidores"] > mayor_following:
+                    amigo_mas_seguido = (i["value"]["USER_NAME"], i["value"]["seguidores"])
+    r = "El amigo mas popular es: " + str(amigo_mas_seguido)
+    return r
+        
+    
+    
+    
 
 
 def req_4(catalog):
