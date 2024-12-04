@@ -54,8 +54,7 @@ def load_data(catalog, filename1, filename2):
     numpremium = 0
     dicnumciudades = {}
     total_seguidores = 0
-    catalog["followers"] = ar.new_list()
-    
+
     for user in info:
         if user["USER_TYPE"] == "basic":
             numbasic += 1
@@ -67,15 +66,8 @@ def load_data(catalog, filename1, filename2):
         else:
             dicnumciudades[user["CITY"]] = 1
             
-        if user["USER_ID"] != "" and user["USER_ID"] != None:
-            al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
-            mp.put(catalog["info"], float(user["USER_ID"]), user)
-        else:
-            al.insert_vertex(catalog["conexiones"], (user["USER_ID"]), user)
-            mp.put(catalog["info"], (user["USER_ID"]), user)
-            
-        catalog["followers"]["USER_ID"] = []
-            
+        al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
+        mp.put(catalog["info"], float(user["USER_ID"]), user)
     
     for conexion in conexiones:
         follower_id = float(conexion["FOLLOWER_ID"])
@@ -88,11 +80,6 @@ def load_data(catalog, filename1, filename2):
         else:
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
-            
-        if followed_id in catalog["followers"]:
-            catalog["followers"][followed_id].append(follower_id)
-        else:
-            catalog["followers"][followed_id] = [follower_id]
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
@@ -140,34 +127,33 @@ def req_3(catalog, id): #Implementado por Nicorodv
     amigos = ar.new_list()
     amigo_mas_seguido = {}
     mayor_following = 0
-    
-    
-    for user in catalog["followers"][float(id)]:
-        for seguido in catalog["conexiones"]["vertices"]["table"]["elements"]: 
-        #iterar sobre seguidos
-            if seguido["key"] == user:
-               ar.add_last(amigos, user)     
-                 
+         
+    for usuario in al.adjacent_edges(catalog["conexiones"], ("USER_ID")):
         
-                     
-    for amigo in amigos["elements"]:   
-        amigo_info = mp.get(catalog["info"], amigo)  
+        if al.contains_edge(catalog["conexiones"], usuario, float("USER_ID")):
+            ar.add_last(amigos, usuario)
+    print(amigos)               
+    for amigo in amigos["elements"]:
+        
+        amigo_info = mp.get(catalog["info"], amigo)
+        
         if amigo_info != None:
-            followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)  
+            followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)
+            
             if followers_actual > mayor_following:
                 mayor_following = followers_actual
                 amigo_mas_seguido = {
                     "id": amigo,
-                    "nombre": amigo_info["USER_NAME"],
+                    "nombre": amigo_info["value"]["USER_NAME"],
                     "followers": mayor_following
                 }
-            
+                
       
-    r = "El amigo mas popular es " + str(amigo_mas_seguido["nombre"]) + " con " + str(amigo_mas_seguido["followers"]) + " followers."
+    #r = "El amigo mas popular es: " + amigo_mas_seguido["nombre"] + " con " + amigo_mas_seguido["followers"]
     end = get_time()
     delta = delta_time(start, end)
     
-    return  r, delta
+    return  delta
         
     
     
