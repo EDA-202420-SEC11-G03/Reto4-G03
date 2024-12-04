@@ -74,8 +74,9 @@ def print_req_5(control):
         Función que imprime la solución del Requerimiento 5 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 5
-    pass
-
+    x = input(print("inserte el id"))
+    y = input(print("inserte el numero de amigos"))
+    print(lg.req_5(control, x, y))
 
 def print_req_6(control):
     """
