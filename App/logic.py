@@ -8,7 +8,7 @@ def new_logic():
     Crea el catalogo para almacenar las estructuras de datos
     """
     #TODO: Llama a las funciónes de creación de las estructuras de datos
-    catalog = {"conexiones": al.new_graph(), "info": mp.new_map(100, 0.5)}
+    catalog = {"conexiones": al.new_graph(19, True), "info": mp.new_map(100, 0.5)}
     return catalog
 
 # Funciones para la carga de datos
@@ -17,48 +17,57 @@ def load_data(catalog, filename1, filename2):
     """
     Carga los datos del reto
     """
-    # TODO: Realizar la carga de datos
+    import csv  # Asegúrate de importar csv
+
     with open(filename1, mode='r', encoding='latin-1') as file:
         reader = csv.DictReader(file, delimiter=';')
         info = [row for row in reader]
     with open(filename2, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=';')
         conexiones = [row for row in reader]
-    numconex=0
-    numusuarios=0
-    numbasic=0
-    numpremium=0
+        
+    numconex = 0
+    numusuarios = 0
+    numbasic = 0
+    numpremium = 0
     dicnumciudades = {}
-    prom=0
-    for usuario in info:
-        dicnumciudades[usuario["CITY"]]=0
-        if usuario["USER_TYPE"]=="basic":
-            numbasic+=1
+    total_seguidores = 0
+
+    for user in info:
+        if user["USER_TYPE"] == "basic":
+            numbasic += 1
         else:
-            numpremium+=1
-        numusuarios+=1
-        usuario["seguidores"]=0
-        usuario
-        usuario["lista de seguidores"]= ar.new_list()
-        usuario["personas que sigue"]= ar.new_list()
-        for conexion in conexiones:
-            if float(usuario["USER_ID"])== float(conexion["FOLLOWED_ID"]):
-                usuario["seguidores"]+=1
-                ar.add_last(usuario["lista de seguidores"], conexion["FOLLOWER_ID"])
-            elif float(usuario["USER_ID"])== float(conexion["FOLLOWER_ID"]): 
-                ar.add_last(usuario["personas que sigue"],conexion["FOLLOWED_ID"])
-         
-    for usuario in info:
-        prom+=usuario["seguidores"]
-        dicnumciudades[usuario["CITY"]]+=1
-        mp.put(catalog["info"], float(usuario["USER_ID"]), usuario)
+            numpremium += 1
+        numusuarios += 1
+        if user["CITY"] in dicnumciudades:
+            dicnumciudades[user["CITY"]] += 1
+        else:
+            dicnumciudades[user["CITY"]] = 1
+            
+        al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
+        mp.put(catalog["info"], float(user["USER_ID"]), user)
+    
     for conexion in conexiones:
-        al.insert_vertex(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), conexion)
-        al.add_edge(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), float(conexion["FOLLOWED_ID"]))
-        numconex+=1
-    prom = prom/numusuarios
-    ciudad = max(dicnumciudades, key=dicnumciudades.get)
-    return (numusuarios, numconex, numbasic, numpremium, prom, ciudad)
+        follower_id = float(conexion["FOLLOWER_ID"])
+        followed_id = float(conexion["FOLLOWED_ID"])
+        al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
+        numconex += 1
+        
+        if mp.get(catalog["conexiones"]["in_degree"], followed_id) is None:
+            mp.put(catalog["conexiones"]["in_degree"], followed_id, 1)
+        else:
+            grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
+            mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
+        
+        if mp.get(catalog["info"], followed_id) is not None:
+            total_seguidores += 1
+
+    prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
+    
+    ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
+    
+    return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
+
 # Funciones de consulta sobre el catálogo
 
 def get_data(catalog, id):
@@ -92,23 +101,35 @@ def req_3(catalog, id): #Implementado por Nicorodv
     start = get_time()
     info_user = mp.get(catalog["info"], float(id))
     amigos = ar.new_list()
-    amigo_mas_seguido = ()
+    amigo_mas_seguido = {}
     mayor_following = 0
-    
-    for usuario in info_user["personas que sigue"]["elements"]:
-        if usuario in info_user["lista de seguidores"]["elements"]:
+         
+    for usuario in al.adjacent_edges(catalog["conexiones"], ("USER_ID")):
+        
+        if al.contains_edge(catalog["conexiones"], usuario, float("USER_ID")):
             ar.add_last(amigos, usuario)
-            
+    print(amigos)               
     for amigo in amigos["elements"]:
-        for i in catalog["info"]["table"]["elements"]:
-            if float(amigo) == i["key"]:   
-                if i["value"]["seguidores"] > mayor_following:
-                    amigo_mas_seguido = (i["value"]["USER_NAME"], i["value"]["seguidores"])
-    r = "El amigo mas popular es: " + str(amigo_mas_seguido)
-    end = get_time
+        
+        amigo_info = mp.get(catalog["info"], amigo)
+        
+        if amigo_info != None:
+            followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)
+            
+            if followers_actual > mayor_following:
+                mayor_following = followers_actual
+                amigo_mas_seguido = {
+                    "id": amigo,
+                    "nombre": amigo_info["value"]["USER_NAME"],
+                    "followers": mayor_following
+                }
+                
+      
+    #r = "El amigo mas popular es: " + amigo_mas_seguido["nombre"] + " con " + amigo_mas_seguido["followers"]
+    end = get_time()
     delta = delta_time(start, end)
     
-    return r, delta
+    return  delta
         
     
     

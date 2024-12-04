@@ -3,10 +3,14 @@ from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import edge as ed
 
 def new_graph(size=19, directed=False):
+    in_degree = None
+    if directed:
+        in_degree = mp.new_map(size, 0.5)
+    
     return {
         "vertices": mp.new_map(size, 0.5),
         "information": mp.new_map(size, 0.5),
-        "in_degree": None,
+        "in_degree": in_degree,
         "edges": 0,
         "directed": directed,
         "type": "ADJ_LIST"
@@ -24,9 +28,6 @@ def num_edges(my_graph):
     return my_graph["edges"]
 
 def vertices(my_graph):
-    print("--------------------------------------------")
-    print(mp.key_set(my_graph["vertices"]))
-    print("--------------------------------------------")
     return mp.key_set(my_graph["vertices"])
 
 def add_edge(graph, vertex_a, vertex_b, weight=0):
@@ -85,3 +86,10 @@ def in_degree(my_graph, key_vertex):
     if a == None:
         return None
     return a['size']
+def adjacent_edges(my_graph, vertex):
+    """
+    Retorna los vértices adyacentes (los que el vértice dado apunta).
+    """
+    if vertex in my_graph:
+        return my_graph[vertex]  
+    return []
