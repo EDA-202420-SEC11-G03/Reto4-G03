@@ -27,7 +27,7 @@ def load_data(control):
     Carga los datos
     """
     #TODO: Realizar la carga de datos
-    print(lg.load_data(control, "./Data/users_info_10.csv", "./Data/relationships_10.csv"))
+    print(lg.load_data(control, "./Data/users_info_large.csv", "./Data/relationships_large.csv"))
     
 
 def print_data(control, id):
@@ -57,8 +57,8 @@ def print_req_3(control):
     """
         Función que imprime la solución del Requerimiento 3 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 3
-    pass
+    x = input(print("Digíte el id a filtrar: "))
+    print(lg.req_3(control, x))
 
 
 def print_req_4(control):
@@ -82,8 +82,8 @@ def print_req_6(control):
     """
         Función que imprime la solución del Requerimiento 6 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 6
-    pass
+    x = input(print("Escriba el número de followers a filtrar: "))
+    print(lg.req_6(control, x))
 
 
 def print_req_7(control):
