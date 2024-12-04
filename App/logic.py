@@ -17,9 +17,8 @@ def load_data(catalog, filename1, filename2):
     """
     Carga los datos del reto
     """
+    import csv  # Asegúrate de importar csv
 
-    # TODO: Realizar la carga de datos
-    
     with open(filename1, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=';')
         info = [row for row in reader]
@@ -32,11 +31,9 @@ def load_data(catalog, filename1, filename2):
     numbasic = 0
     numpremium = 0
     dicnumciudades = {}
-    prom_seguidores = 0
-
+    total_seguidores = 0
 
     for user in info:
-    
         if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
@@ -49,27 +46,28 @@ def load_data(catalog, filename1, filename2):
             
         al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
         mp.put(catalog["info"], float(user["USER_ID"]), user)
+    
+    for conexion in conexiones:
+        follower_id = float(conexion["FOLLOWER_ID"])
+        followed_id = float(conexion["FOLLOWED_ID"])
+        al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
+        numconex += 1
         
-        for conexion in conexiones:
-            if float(conexion["FOLLOWER_ID"]) == float(user["USER_ID"]):
-                al.add_edge(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), float(conexion["FOLLOWED_ID"]), conexion["START_DATE"]) 
-                numconex += 1
-            elif float(conexion["FOLLOWED_ID"]) == float(user["USER_ID"]):
-                if mp.get(catalog["conexiones"]["in_degree"], float(user["USER_ID"])) == None:
-                    mp.put(catalog["conexiones"]["in_degree"], float(user["USER_ID"]), 1)
-                    prom_seguidores += 1
-                else:
-                    grado = mp.get(catalog["conexiones"]["in_degree"], float(user["USER_ID"]))
-                    grado += 1
-                    prom_seguidores += 1
-                    mp.put(catalog["conexiones"]["in_degree"], float(user["USER_ID"]), grado)   
+        if mp.get(catalog["conexiones"]["in_degree"], followed_id) is None:
+            mp.put(catalog["conexiones"]["in_degree"], followed_id, 1)
+        else:
+            grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
+            mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
         
-            
-    prom_seguidores = prom_seguidores/numusuarios
+        if mp.get(catalog["info"], followed_id) is not None:
+            total_seguidores += 1
+
+    prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
     
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
+
 # Funciones de consulta sobre el catálogo
 
 def get_data(catalog, id):
