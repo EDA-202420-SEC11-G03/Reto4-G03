@@ -13,27 +13,28 @@ def new_logic():
 
 # Funciones para la carga de datos
 
-def agregar_amigos(catalog, info, conexiones):
+def agregar_amigos(catalog, info):
     """
-    Agrega una llave 'amigos' al catálogo con la información de los amigos de cada usuario.
+    Agrega los amigos de cada usuario
     """
-    catalog["amigos"] = mp.new_map()
+    catalog["amigos"] = mp.new_map(100, 0.5)
+    for user in info:
+        amigos = ar.new_list()
+        
+        lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
+        lista_seguidores = catalog["followers"][float(user["USER_ID"])]
+        
+        lista_seguidos = []
+        
+        for seguido in lista_seguidos_arcos:
+            lista_seguidos.append(seguido["vertex_b"])
+        
+        for seguido in lista_seguidos:
+            if seguido in lista_seguidores:
+                ar.add_last(amigos, seguido)
+        mp.put(catalog["amigos"], float(user["USER_ID"]), amigos)
 
-    for conexion in conexiones:
-        follower_id = float(conexion["FOLLOWER_ID"])
-        followed_id = float(conexion["FOLLOWED_ID"])
 
-        if mp.contains(catalog["info"], follower_id) and mp.contains(catalog["info"], followed_id):
-            follower_info = mp.get(catalog["info"], follower_id)["value"]
-            followed_info = mp.get(catalog["info"], followed_id)["value"]
-
-            if mp.contains(catalog["amigos"], follower_id):
-                amigos_list = mp.get(catalog["amigos"], follower_id)["value"]
-            else:
-                amigos_list = ar.new_list()
-                mp.put(catalog["amigos"], follower_id, amigos_list)
-
-            ar.add_last(amigos_list, followed_info)
 
 def load_data(catalog, filename1, filename2):
     """
@@ -54,7 +55,8 @@ def load_data(catalog, filename1, filename2):
     numpremium = 0
     dicnumciudades = {}
     total_seguidores = 0
-
+    catalog["followers"] = ar.new_list()
+    
     for user in info:
         if user["USER_TYPE"] == "basic":
             numbasic += 1
@@ -66,8 +68,15 @@ def load_data(catalog, filename1, filename2):
         else:
             dicnumciudades[user["CITY"]] = 1
             
-        al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
-        mp.put(catalog["info"], float(user["USER_ID"]), user)
+        if user["USER_ID"] != "" and user["USER_ID"] != None:
+            al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
+            mp.put(catalog["info"], float(user["USER_ID"]), user)
+        else:
+            al.insert_vertex(catalog["conexiones"], (user["USER_ID"]), user)
+            mp.put(catalog["info"], float(user["USER_ID"]), user)
+            
+        catalog["followers"]["USER_ID"] = []
+            
     
     for conexion in conexiones:
         follower_id = float(conexion["FOLLOWER_ID"])
@@ -80,6 +89,11 @@ def load_data(catalog, filename1, filename2):
         else:
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
+            
+        if followed_id in catalog["followers"]:
+            catalog["followers"][followed_id].append(follower_id)
+        else:
+            catalog["followers"][followed_id] = [follower_id]
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
@@ -87,8 +101,9 @@ def load_data(catalog, filename1, filename2):
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
     
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
-
-    agregar_amigos(catalog, info, conexiones)
+    
+    agregar_amigos(catalog, info)
+    print(mp.value_set(catalog["amigos"]))
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
 
