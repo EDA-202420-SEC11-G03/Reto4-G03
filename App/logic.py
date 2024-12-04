@@ -50,10 +50,10 @@ def load_data(catalog, filename1, filename2):
     for usuario in info:
         prom+=usuario["seguidores"]
         dicnumciudades[usuario["CITY"]]+=1
-        mp.put(catalog["info"], usuario["USER_ID"], usuario)
+        mp.put(catalog["info"], float(usuario["USER_ID"]), usuario)
     for conexion in conexiones:
-        al.insert_vertex(catalog["conexiones"], conexion["FOLLOWER_ID"], conexion)
-        al.add_edge(catalog["conexiones"], conexion["FOLLOWER_ID"], conexion["FOLLOWED_ID"])
+        al.insert_vertex(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), conexion)
+        al.add_edge(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), float(conexion["FOLLOWED_ID"]))
         numconex+=1
     prom = prom/numusuarios
     ciudad = max(dicnumciudades, key=dicnumciudades.get)
@@ -100,13 +100,30 @@ def req_4(catalog):
     pass
 
 
-def req_5(catalog):
+def req_5(catalog, id, amigos):
     """
     Retorna el resultado del requerimiento 5
     """
     # TODO: Modificar el requerimiento 5
-    pass
+    info = mp.get(catalog["info"], float(id))
+    
+    i=0
+    lista = ar.new_list()
+    listaamigos = ar.new_list()
+    for seguido in info["personas que sigue"]["elements"]:
+        if seguido in info["lista de seguidores"]["elements"]:
+            ar.add_last(listaamigos, seguido)
 
+    while i <= float(amigos) and i< listaamigos["size"]:
+         
+        infoseguido = mp.get(catalog["info"], float(listaamigos["elements"][i]))
+        if infoseguido["personas que sigue"]["size"]>1:
+
+            dicseguido = {"id": infoseguido["USER_ID"], "nombre": infoseguido["USER_NAME"], "seguidores": infoseguido["seguidores"]}
+            ar.add_last(lista, dicseguido)
+        i+=1        
+    return lista
+        
 def req_6(catalog):
     """
     Retorna el resultado del requerimiento 6
