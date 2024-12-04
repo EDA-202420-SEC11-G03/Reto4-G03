@@ -36,11 +36,8 @@ def load_data(catalog, filename1, filename2):
 
 
     for user in info:
-        
-        print(f"id: {user['USER_ID']}, name: {user['USER_NAME']}, type: {user['USER_TYPE']}, city: {user['CITY']}, age: {user['AGE']}, join date: {user['JOIN_DATE']}")
-        print("------------------------------------")
-                
-        if user["USER_TYPE"] == "Basic":
+    
+        if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
             numpremium += 1
