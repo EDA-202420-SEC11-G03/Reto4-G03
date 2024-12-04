@@ -194,7 +194,7 @@ def req_8(catalog, latitud, longitud, radio):
         fill_opacity=0.2
     ).add_to(m)
     for vertice in vertices["elements"]:
-        infovert = mp.get(catalog["info"], float(vertice))
+        infovert = mp.get(catalog["conexiones"]["information"], float(vertice))
         if infovert is not None:
         
             distancia = haversine(latitud, longitud, float(infovert["LATITUDE"]), float(infovert["LONGITUDE"]))
