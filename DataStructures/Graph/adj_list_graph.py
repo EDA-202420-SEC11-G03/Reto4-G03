@@ -24,9 +24,7 @@ def num_edges(my_graph):
     return my_graph["edges"]
 
 def vertices(my_graph):
-    print("--------------------------------------------")
-    print(mp.key_set(my_graph["vertices"]))
-    print("--------------------------------------------")
+    
     return mp.key_set(my_graph["vertices"])
 
 def add_edge(graph, vertex_a, vertex_b, weight=0):

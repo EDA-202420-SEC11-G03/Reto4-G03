@@ -99,7 +99,11 @@ def print_req_8(control):
         Función que imprime la solución del Requerimiento 8 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 8
-    pass
+    x = input(print("inserte latitud"))
+    y = input(print("inserte longitud"))
+    z = input(print("inserte el radio"))
+    
+    print(lg.req_8(control, x, y,z))
 
 
 # Se crea la lógica asociado a la vista
