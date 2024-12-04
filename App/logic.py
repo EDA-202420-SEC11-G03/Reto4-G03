@@ -15,27 +15,28 @@ def new_logic():
 
 # Funciones para la carga de datos
 
-def agregar_amigos(catalog, info, conexiones):
+def agregar_amigos(catalog, info):
     """
-    Agrega una llave 'amigos' al catálogo con la información de los amigos de cada usuario.
+    Agrega los amigos de cada usuario
     """
-    catalog["amigos"] = mp.new_map()
+    catalog["amigos"] = mp.new_map(100, 0.5)
+    for user in info:
+        amigos = ar.new_list()
+        
+        lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
+        lista_seguidores = catalog["followers"][float(user["USER_ID"])]
+        
+        lista_seguidos = []
+        
+        for seguido in lista_seguidos_arcos:
+            lista_seguidos.append(seguido["vertex_b"])
+        
+        for seguido in lista_seguidos:
+            if seguido in lista_seguidores:
+                ar.add_last(amigos, seguido)
+        mp.put(catalog["amigos"], float(user["USER_ID"]), amigos)
 
-    for conexion in conexiones:
-        follower_id = float(conexion["FOLLOWER_ID"])
-        followed_id = float(conexion["FOLLOWED_ID"])
 
-        if mp.contains(catalog["info"], follower_id) and mp.contains(catalog["info"], followed_id):
-            follower_info = mp.get(catalog["info"], follower_id)["value"]
-            followed_info = mp.get(catalog["info"], followed_id)["value"]
-
-            if mp.contains(catalog["amigos"], follower_id):
-                amigos_list = mp.get(catalog["amigos"], follower_id)["value"]
-            else:
-                amigos_list = ar.new_list()
-                mp.put(catalog["amigos"], follower_id, amigos_list)
-
-            ar.add_last(amigos_list, followed_info)
 
 def load_data(catalog, filename1, filename2):
     """
@@ -74,7 +75,7 @@ def load_data(catalog, filename1, filename2):
             mp.put(catalog["info"], float(user["USER_ID"]), user)
         else:
             al.insert_vertex(catalog["conexiones"], (user["USER_ID"]), user)
-            mp.put(catalog["info"], (user["USER_ID"]), user)
+            mp.put(catalog["info"], float(user["USER_ID"]), user)
             
         catalog["followers"]["USER_ID"] = []
             
@@ -102,8 +103,9 @@ def load_data(catalog, filename1, filename2):
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
     
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
-
-    agregar_amigos(catalog, info, conexiones)
+    
+    agregar_amigos(catalog, info)
+    print(mp.value_set(catalog["amigos"]))
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
 
@@ -142,34 +144,33 @@ def req_3(catalog, id): #Implementado por Nicorodv
     amigos = ar.new_list()
     amigo_mas_seguido = {}
     mayor_following = 0
-    
-    
-    for user in catalog["followers"][float(id)]:
-        for seguido in catalog["conexiones"]["vertices"]["table"]["elements"]: 
-        #iterar sobre seguidos
-            if seguido["key"] == user:
-               ar.add_last(amigos, user)     
-                 
+         
+    for usuario in al.adjacent_edges(catalog["conexiones"], ("USER_ID")):
         
-                     
-    for amigo in amigos["elements"]:   
-        amigo_info = mp.get(catalog["info"], amigo)  
+        if al.contains_edge(catalog["conexiones"], usuario, float("USER_ID")):
+            ar.add_last(amigos, usuario)
+    print(amigos)               
+    for amigo in amigos["elements"]:
+        
+        amigo_info = mp.get(catalog["info"], amigo)
+        
         if amigo_info != None:
-            followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)  
+            followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)
+            
             if followers_actual > mayor_following:
                 mayor_following = followers_actual
                 amigo_mas_seguido = {
                     "id": amigo,
-                    "nombre": amigo_info["USER_NAME"],
+                    "nombre": amigo_info["value"]["USER_NAME"],
                     "followers": mayor_following
                 }
-            
+                
       
-    r = "El amigo mas popular es " + str(amigo_mas_seguido["nombre"]) + " con " + str(amigo_mas_seguido["followers"]) + " followers."
+    #r = "El amigo mas popular es: " + amigo_mas_seguido["nombre"] + " con " + amigo_mas_seguido["followers"]
     end = get_time()
     delta = delta_time(start, end)
     
-    return  r, delta
+    return  delta
         
     
     

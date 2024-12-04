@@ -27,7 +27,7 @@ def load_data(control):
     Carga los datos
     """
     #TODO: Realizar la carga de datos
-    print(lg.load_data(control, "./Data/users_info_large.csv", "./Data/relationships_large.csv"))
+    print(lg.load_data(control, "./Data/users_info_10.csv", "./Data/relationships_10.csv"))
     
 
 def print_data(control, id):
