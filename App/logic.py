@@ -52,8 +52,8 @@ def load_data(catalog, filename1, filename2):
         dicnumciudades[usuario["CITY"]]+=1
         mp.put(catalog["info"], float(usuario["USER_ID"]), usuario)
     for conexion in conexiones:
-        al.insert_vertex(catalog["conexiones"], conexion["FOLLOWER_ID"], conexion)
-        al.add_edge(catalog["conexiones"], conexion["FOLLOWER_ID"], conexion["FOLLOWED_ID"])
+        al.insert_vertex(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), conexion)
+        al.add_edge(catalog["conexiones"], float(conexion["FOLLOWER_ID"]), float(conexion["FOLLOWED_ID"]))
         numconex+=1
     prom = prom/numusuarios
     ciudad = max(dicnumciudades, key=dicnumciudades.get)
