@@ -89,6 +89,7 @@ def req_3(catalog, id): #Implementado por Nicorodv
     """
     Retorna el resultado del requerimiento 3
     """
+    start = get_time()
     info_user = mp.get(catalog["info"], float(id))
     amigos = ar.new_list()
     amigo_mas_seguido = ()
@@ -104,7 +105,10 @@ def req_3(catalog, id): #Implementado por Nicorodv
                 if i["value"]["seguidores"] > mayor_following:
                     amigo_mas_seguido = (i["value"]["USER_NAME"], i["value"]["seguidores"])
     r = "El amigo mas popular es: " + str(amigo_mas_seguido)
-    return r
+    end = get_time
+    delta = delta_time(start, end)
+    
+    return r, delta
         
     
     
@@ -143,12 +147,19 @@ def req_5(catalog, id, amigos):
         i+=1        
     return lista
         
-def req_6(catalog):
+def req_6(catalog, number):
     """
     Retorna el resultado del requerimiento 6
     """
-    # TODO: Modificar el requerimiento 6
-    pass
+    
+    lista_filtro = ar.new_list()
+    
+    for user in catalog["info"]["table"]["elements"]:
+        if user["value"] != None:
+            if user["value"]["seguidores"] != None:
+                if user["value"]["seguidores"] > int(number):
+                    ar.add_last(lista_filtro, user)
+    print(lista_filtro)
 
 
 def req_7(catalog):
