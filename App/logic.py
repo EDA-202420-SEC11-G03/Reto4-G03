@@ -13,6 +13,28 @@ def new_logic():
 
 # Funciones para la carga de datos
 
+def agregar_amigos(catalog, info, conexiones):
+    """
+    Agrega una llave 'amigos' al catálogo con la información de los amigos de cada usuario.
+    """
+    catalog["amigos"] = mp.new_map()
+
+    for conexion in conexiones:
+        follower_id = float(conexion["FOLLOWER_ID"])
+        followed_id = float(conexion["FOLLOWED_ID"])
+
+        if mp.contains(catalog["info"], follower_id) and mp.contains(catalog["info"], followed_id):
+            follower_info = mp.get(catalog["info"], follower_id)["value"]
+            followed_info = mp.get(catalog["info"], followed_id)["value"]
+
+            if mp.contains(catalog["amigos"], follower_id):
+                amigos_list = mp.get(catalog["amigos"], follower_id)["value"]
+            else:
+                amigos_list = ar.new_list()
+                mp.put(catalog["amigos"], follower_id, amigos_list)
+
+            ar.add_last(amigos_list, followed_info)
+
 def load_data(catalog, filename1, filename2):
     """
     Carga los datos del reto
@@ -78,6 +100,8 @@ def load_data(catalog, filename1, filename2):
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
     
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
+
+    agregar_amigos(catalog, info, conexiones)
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
 
