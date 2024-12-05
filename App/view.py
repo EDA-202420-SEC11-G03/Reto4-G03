@@ -67,7 +67,10 @@ def print_req_4(control):
         Función que imprime la solución del Requerimiento 4 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 4
-    pass
+    id1 = input("ingrese el id del usuario 1: ")
+    id2 = input("ingrese el id del usuario 2: ")
+    
+    print(lg.req_4(control, id1, id2))
 
 
 def print_req_5(control):
@@ -100,7 +103,11 @@ def print_req_8(control):
         Función que imprime la solución del Requerimiento 8 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 8
-    pass
+    x = input(print("inserte latitud"))
+    y = input(print("inserte longitud"))
+    z = input(print("inserte el radio"))
+    
+    print(lg.req_8(control, x, y,z))
 
 
 # Se crea la lógica asociado a la vista

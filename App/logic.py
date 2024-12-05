@@ -3,6 +3,8 @@ from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import adj_list_graph as al
 from DataStructures.List import array_list as ar
 import csv
+import folium
+from math import radians, sin, cos, sqrt, atan2
 def new_logic():
     """
     Crea el catalogo para almacenar las estructuras de datos
@@ -12,6 +14,31 @@ def new_logic():
     return catalog
 
 # Funciones para la carga de datos
+
+def agregar_amigos(catalog, info):
+    """
+    Agrega los amigos de cada usuario
+    """
+    catalog["amigos"] = mp.new_map(100, 0.5)
+    for user in info:
+        amigos = ar.new_list()
+        
+
+        lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
+        lista_seguidores = mp.get(catalog["followers"], user["USER_ID"])["elements"]
+
+        lista_seguidos = []
+        
+        for seguido in lista_seguidos_arcos:
+            lista_seguidos.append(seguido["vertex_b"])
+
+        
+        for seguido in lista_seguidos:
+            if seguido in lista_seguidores:
+                ar.add_last(amigos, seguido)
+        mp.put(catalog["amigos"], float(user["USER_ID"]), amigos)
+
+
 
 def load_data(catalog, filename1, filename2):
     """
@@ -32,9 +59,12 @@ def load_data(catalog, filename1, filename2):
     numpremium = 0
     dicnumciudades = {}
     total_seguidores = 0
-    catalog["followers"] = ar.new_list()
+    catalog["followers"] = mp.new_map(100, 0.5)
+    
+    
     
     for user in info:
+        
         if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
@@ -45,17 +75,13 @@ def load_data(catalog, filename1, filename2):
         else:
             dicnumciudades[user["CITY"]] = 1
             
-        if user["USER_ID"] != "" and user["USER_ID"] != None:
-            al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
-            mp.put(catalog["info"], float(user["USER_ID"]), user)
-        else:
-            al.insert_vertex(catalog["conexiones"], (user["USER_ID"]), user)
-            mp.put(catalog["info"], (user["USER_ID"]), user)
-            
-        catalog["followers"]["USER_ID"] = []
-            
+        al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
+        mp.put(catalog["info"], float(user["USER_ID"]), user)
+
+        mp.put(catalog["followers"], user["USER_ID"], ar.new_list())
     
     for conexion in conexiones:
+        fd_id = str(conexion["FOLLOWED_ID"])
         follower_id = float(conexion["FOLLOWER_ID"])
         followed_id = float(conexion["FOLLOWED_ID"])
         al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
@@ -66,11 +92,10 @@ def load_data(catalog, filename1, filename2):
         else:
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
-            
-        if followed_id in catalog["followers"]:
-            catalog["followers"][followed_id].append(follower_id)
-        else:
-            catalog["followers"][followed_id] = [follower_id]
+        
+        lista = mp.get(catalog["followers"], fd_id)
+        ar.add_last(lista, follower_id)
+        mp.put(catalog["followers"], fd_id, lista)
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
@@ -78,6 +103,9 @@ def load_data(catalog, filename1, filename2):
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
     
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
+    
+    agregar_amigos(catalog, info)
+    print(mp.value_set(catalog["amigos"]))
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
 
@@ -157,7 +185,7 @@ def req_3(catalog, id): #Implementado por Nicorodv
                 mayor_following = followers_actual
                 amigo_mas_seguido = {
                     "id": amigo,
-                    "nombre": amigo_info["USER_NAME"],
+                    "nombre": amigo_info["value"]["USER_NAME"],
                     "followers": mayor_following
                 }
               
@@ -165,19 +193,26 @@ def req_3(catalog, id): #Implementado por Nicorodv
     end = get_time()
     delta = delta_time(start, end)
     
-    return  r, delta
-        
-    
-    
-    
+    return  delta
 
-
-def req_4(catalog):
+def req_4(catalog, id1, id2):
     """
     Retorna el resultado del requerimiento 4
     """
     # TODO: Modificar el requerimiento 4
-    pass
+    start = get_time()
+    amigos1 = mp.get(catalog["amigos"], float(id1))
+    amigos2 = mp.get(catalog["amigos"], float(id2))
+    
+    amigos_comunes = ar.new_list()
+    
+    for amigo in amigos1["elements"]:
+        if amigo in amigos2["elements"]:
+            ar.add_last(amigos_comunes, amigo)
+
+    end = get_time()
+    delta = delta_time(start, end)
+    return [amigos_comunes, delta]
 
 
 def req_5(catalog, id, amigos):
@@ -185,21 +220,29 @@ def req_5(catalog, id, amigos):
     Retorna el resultado del requerimiento 5
     """
     # TODO: Modificar el requerimiento 5
-    info = mp.get(catalog["info"], float(id))
+    info = mp.get(catalog["conexiones"]["vertices"], float(id))
     
     i=0
     lista = ar.new_list()
     listaamigos = ar.new_list()
-    for seguido in info["personas que sigue"]["elements"]:
-        if seguido in info["lista de seguidores"]["elements"]:
-            ar.add_last(listaamigos, seguido)
+    
+    
+    for seguido in info["elements"]:
+        id_seguido = seguido["vertex_b"]
+        seguidosseguidor =  mp.get(catalog["conexiones"]["vertices"], id_seguido)
+        for seguido2 in seguidosseguidor["elements"]:
+            if seguido2["vertex_b"]== float(id):
+                ar.add_last(listaamigos, id_seguido)
+
+        
+    
 
     while lista["size"]<= float(amigos) and i< listaamigos["size"]:
          
-        infoseguido = mp.get(catalog["info"], float(listaamigos["elements"][i]))
-        if infoseguido["personas que sigue"]["size"]>1:
-
-            dicseguido = {"id": infoseguido["USER_ID"], "nombre": infoseguido["USER_NAME"], "seguidores": infoseguido["seguidores"]}
+        infoamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])
+        if infoamigo["size"]>1:
+            amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
+            dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": al.in_degree(catalog["conexiones"], listaamigos["elements"][i])}
             ar.add_last(lista, dicseguido)
         i+=1        
     return lista
@@ -226,13 +269,53 @@ def req_7(catalog):
     # TODO: Modificar el requerimiento 7
     pass
 
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371.0
 
-def req_8(catalog):
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+    return distance
+def req_8(catalog, latitud, longitud, radio):
     """
     Retorna el resultado del requerimiento 8
     """
     # TODO: Modificar el requerimiento 8
-    pass
+    latitud = float(latitud)
+    longitud = float(longitud)
+    radio = float(radio)
+    vertices = al.vertices(catalog["conexiones"])
+    m = folium.Map(location=[latitud, longitud], zoom_start=12)
+
+    folium.Circle(
+        location=[latitud, longitud],
+        radius=radio * 1000,  
+        color="blue",
+        fill=True,
+        fill_opacity=0.2
+    ).add_to(m)
+    for vertice in vertices["elements"]:
+        infovert = mp.get(catalog["conexiones"]["information"], float(vertice))
+        if infovert is not None:
+        
+            distancia = haversine(latitud, longitud, float(infovert["LATITUDE"]), float(infovert["LONGITUDE"]))
+            if distancia<= radio:
+                folium.Marker(
+                location=[float(infovert["LATITUDE"]), float(infovert["LONGITUDE"])],
+                popup=f"{infovert["USER_NAME"]} - {distancia:.2f} km",
+                icon=folium.Icon(color="green")
+            ).add_to(m)
+    m.save("mapa_usuarios.html")        
+        
 
 
 # Funciones para medir tiempos de ejecucion

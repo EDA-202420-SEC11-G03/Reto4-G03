@@ -87,6 +87,9 @@ def in_degree(my_graph, key_vertex):
         return None
     return a['size']
 def adjacent_edges(my_graph, vertex):
+    """
+    Retorna los vértices adyacentes (los que el vértice dado apunta).
+    """
     if vertex in my_graph:
         return my_graph[vertex]
     else:
