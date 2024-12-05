@@ -201,20 +201,9 @@ def req_5(catalog, id, amigos):
     
     i=0
     lista = ar.new_list()
-    listaamigos = ar.new_list()
+    listaamigos = mp.get(catalog["amigos"], float(id))
     
-    
-    for seguido in info["elements"]:
-        id_seguido = seguido["vertex_b"]
-        seguidosseguidor =  mp.get(catalog["conexiones"]["vertices"], id_seguido)
-        for seguido2 in seguidosseguidor["elements"]:
-            if seguido2["vertex_b"]== float(id):
-                ar.add_last(listaamigos, id_seguido)
-
-        
-    
-
-    while lista["size"]<= float(amigos) and i< listaamigos["size"]:
+    while lista["size"]< float(amigos) and i< listaamigos["size"]:
          
         infoamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])
         if infoamigo["size"]>1:
