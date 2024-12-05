@@ -208,6 +208,8 @@ def req_5(catalog, id, amigos):
     Retorna el resultado del requerimiento 5
     """
     # TODO: Modificar el requerimiento 5
+    start = get_time()
+    
     info = mp.get(catalog["conexiones"]["vertices"], float(id))
     
     i=0
@@ -221,8 +223,11 @@ def req_5(catalog, id, amigos):
             amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
             dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": al.in_degree(catalog["conexiones"], listaamigos["elements"][i])}
             ar.add_last(lista, dicseguido)
-        i+=1        
-    return lista
+        i+=1    
+        
+    end = get_time()
+    delta = delta_time(start, end)    
+    return [lista, delta]
         
 def req_6(catalog, number):
     """
