@@ -208,26 +208,24 @@ def req_5(catalog, id, amigos):
     Retorna el resultado del requerimiento 5
     """
     # TODO: Modificar el requerimiento 5
+    
     start = get_time()
-    
-    info = mp.get(catalog["conexiones"]["vertices"], float(id))
-    
     i=0
     lista = ar.new_list()
     listaamigos = mp.get(catalog["amigos"], float(id))
     
     while lista["size"]< float(amigos) and i< listaamigos["size"]:
-         
-        infoamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])
-        if infoamigo["size"]>1:
-            amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
-            dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": al.in_degree(catalog["conexiones"], listaamigos["elements"][i])}
-            ar.add_last(lista, dicseguido)
-        i+=1    
+        seguidosamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])["size"]
         
+        if seguidosamigo>1:
+            amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
+            dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": (al.in_degree(catalog["conexiones"], listaamigos["elements"][i])/2)}
+            ar.add_last(lista, dicseguido)
+        i+=1 
     end = get_time()
-    delta = delta_time(start, end)    
-    return [lista, delta]
+    delta = delta_time(start, end)
+    print(delta)       
+    return lista
         
 def req_6(catalog, number):
     """
