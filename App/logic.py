@@ -5,6 +5,7 @@ from DataStructures.List import array_list as ar
 import csv
 #import folium
 from math import radians, sin, cos, sqrt, atan2
+
 def new_logic():
     """
     Crea el catalogo para almacenar las estructuras de datos
@@ -23,32 +24,28 @@ def agregar_amigos(catalog, info):
     for user in info:
         amigos = ar.new_list()
         
-
         lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
-        lista_seguidores = mp.get(catalog["followers"], user["USER_ID"])["elements"]
+        lista_seguidores = mp.get(catalog["followers"], float(user["USER_ID"]))["elements"]
 
         lista_seguidos = []
-        
         for seguido in lista_seguidos_arcos:
             lista_seguidos.append(seguido["vertex_b"])
 
-        
         for seguido in lista_seguidos:
             if seguido in lista_seguidores:
                 ar.add_last(amigos, seguido)
+        
         mp.put(catalog["amigos"], float(user["USER_ID"]), amigos)
-
 
 
 def load_data(catalog, filename1, filename2):
     """
     Carga los datos del reto
     """
-    import csv  # Asegúrate de importar csv
-
     with open(filename1, mode='r', encoding='latin-1') as file:
         reader = csv.DictReader(file, delimiter=';')
-        info = [row for row in reader]
+        info = [{**row, "USER_ID": int(float(row["USER_ID"]))} for row in reader]
+        
     with open(filename2, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=';')
         conexiones = [row for row in reader]
@@ -61,10 +58,7 @@ def load_data(catalog, filename1, filename2):
     total_seguidores = 0
     catalog["followers"] = mp.new_map(100, 0.5)
     
-    
-    
     for user in info:
-        
         if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
@@ -77,13 +71,12 @@ def load_data(catalog, filename1, filename2):
             
         al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
         mp.put(catalog["info"], float(user["USER_ID"]), user)
-
-        mp.put(catalog["followers"], user["USER_ID"], ar.new_list())
+        mp.put(catalog["followers"], float(user["USER_ID"]), ar.new_list())
     
     for conexion in conexiones:
-        fd_id = str(conexion["FOLLOWED_ID"])
         follower_id = float(conexion["FOLLOWER_ID"])
         followed_id = float(conexion["FOLLOWED_ID"])
+        
         al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
         numconex += 1
         
@@ -93,21 +86,21 @@ def load_data(catalog, filename1, filename2):
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
         
-        lista = mp.get(catalog["followers"], fd_id)
+        lista = mp.get(catalog["followers"], followed_id)
         ar.add_last(lista, follower_id)
-        mp.put(catalog["followers"], fd_id, lista)
+        mp.put(catalog["followers"], followed_id, lista)
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
 
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
-    
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
     
     agregar_amigos(catalog, info)
     print(mp.value_set(catalog["amigos"]))
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
+
 
 # Funciones de consulta sobre el catálogo
 
@@ -119,47 +112,64 @@ def get_data(catalog, id):
     pass
 
 
-def req_1(catalog, id_origen, id_destino):
-    
-    id_origen = float(id_origen)
-    id_destino = float(id_destino)
-    start = get_time()
-    
-    graph_search = dfs.create_graph_search()    
-    
-   
-        
-    
-    
-    search = dfs.depth_first_search_with_limit(catalog["info"]["table"]["elements"], id_origen, id_destino)
 
-    if not dfs.hasPathTo(search, id_destino):
-        return "No existe un camino entre " +  {id_origen} + " y " + {id_destino}
-        
-    camino = dfs.path_to(search, id_destino)
-    r= []
-    current = camino["first"] 
+    
+def req_1(catalog, usuario_origen, usuario_destino):
+    inicio = get_time()  
 
-    while current != None:
-        user_info = mp.get(catalog["user_map"], current["info"])
-        r.append({
-            "USER_ID": user_info["value"]["USER_ID"],
-            "ALIAS": user_info["value"]["USER_NAME"],
-            "TIPO_DE_CUENTA": user_info["value"]["USER_TYPE"]
+    recorrido = al.dfs(catalog["conexiones"], float(usuario_origen))
+    camino = al.find_path(recorrido, float(usuario_origen), float(usuario_destino))
+    
+    print(recorrido)
+    
+    
+    
+
+    if not mp.contains(search["visited"], usuario_destino):
+        return "No existe ese camino"
+
+    camino = []
+    actual = usuario_destino
+    while actual != usuario_origen:
+        print(actual)
+        camino.append(actual)
+        actual = mp.get(search["path_to"], actual)
+    camino.append(usuario_origen)
+
+    detalles_camino = []
+    for usuario in camino:
+        info_usuario = mp.get(catalog["info"], usuario)
+        detalles_camino.append({
+            "ID": usuario,
+            "Alias": info_usuario["USER_NAME"],
+            "Tipo de Usuario": info_usuario["USER_TYPE"]
         })
-        current = current["next"]
-    end = get_time()
-    delta = delta_time(start, end)
-    return r, len(r), delta  
+
+    fein = get_time()
+    delta = delta_time(inicio, fein)
+
+    return len(camino), detalles_camino, delta
 
 
 
-def req_2(catalog):
+def req_2(catalog, id1, id2):
     """
     Retorna el resultado del requerimiento 2
     """
     # TODO: Modificar el requerimiento 2
-    pass
+    start = get_time()
+    tablita = al.bfs(catalog["conexiones"], float(id1))
+    
+    camino = al.find_path(tablita, float(id1), float(id2))
+    
+    info1 = mp.get(catalog["info"], float(id1))
+    info2 = mp.get(catalog["info"], float(id2))
+    
+    cantidad = len(camino)
+    
+    end = get_time()
+    delta = delta_time(start, end)
+    return [cantidad, info1, camino, info2, delta]
 
 
 def req_3(catalog, id): #Implementado por Nicorodv
@@ -196,14 +206,20 @@ def req_4(catalog, id1, id2):
     amigos2 = mp.get(catalog["amigos"], float(id2))
     
     amigos_comunes = ar.new_list()
+    retorno = ar.new_list()
     
     for amigo in amigos1["elements"]:
         if amigo in amigos2["elements"]:
             ar.add_last(amigos_comunes, amigo)
 
+    for i in amigos_comunes["elements"]:
+        datos = mp.get(catalog["info"], i)
+        ar.add_last(retorno, datos)
+    
     end = get_time()
     delta = delta_time(start, end)
-    return [amigos_comunes, delta]
+    
+    return [retorno, delta]
 
 
 def req_5(catalog, id, amigos):
@@ -216,20 +232,9 @@ def req_5(catalog, id, amigos):
     
     i=0
     lista = ar.new_list()
-    listaamigos = ar.new_list()
+    listaamigos = mp.get(catalog["amigos"], float(id))
     
-    
-    for seguido in info["elements"]:
-        id_seguido = seguido["vertex_b"]
-        seguidosseguidor =  mp.get(catalog["conexiones"]["vertices"], id_seguido)
-        for seguido2 in seguidosseguidor["elements"]:
-            if seguido2["vertex_b"]== float(id):
-                ar.add_last(listaamigos, id_seguido)
-
-        
-    
-
-    while lista["size"]<= float(amigos) and i< listaamigos["size"]:
+    while lista["size"]< float(amigos) and i< listaamigos["size"]:
          
         infoamigo = mp.get(catalog["conexiones"]["vertices"], listaamigos["elements"][i])
         if infoamigo["size"]>1:

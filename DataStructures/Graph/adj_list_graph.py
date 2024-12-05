@@ -86,62 +86,76 @@ def in_degree(my_graph, key_vertex):
     if a == None:
         return None
     return a['size']
+
 def adjacent_edges(my_graph, vertex):
     """
     Retorna los vértices adyacentes (los que el vértice dado apunta).
     """
     if vertex in my_graph:
-        return my_graph[vertex]
-    else:
-        return []
-def contains_vertex(my_graph, key_vertex):
-    return key_vertex in my_graph
+        return my_graph[vertex]  
+    return []
 
-def contains_edge(my_graph, origin_vertex, destination_vertex):
-    if origin_vertex in my_graph:
-        # Verificar si destination está en la lista de nodos adyacentes de source
-        return destination_vertex in my_graph[origin_vertex]
-    return False    
+def bfs(graph, start_vertex):
+    if mp.get(graph["vertices"], start_vertex) is None:
+        return {}
 
+    visited = set()
+    queue = [start_vertex]
+    parents = {start_vertex: None}
 
-def dfs_vertex(search, my_graph, vertex):
-    search["visited"].add(vertex)
-    
-    for vecino in my_graph.get(vertex, []):
-        if vecino not in search["visited"]:
-            search["parent"][vecino] = vertex
-            dfs_vertex(search, my_graph, vecino)
-    
-    return search
+    while queue:
+        current_vertex = queue.pop(0)
+        if current_vertex not in visited:
+            visited.add(current_vertex)
 
-def depth_first_search(my_graph, source):
-    search = create_graph_search()
-    if source in my_graph:
-        dfs_vertex(search, my_graph, source)
-    
-    return search
+            adj_edges = mp.get(graph["vertices"], current_vertex)
+            if adj_edges:
+                for edge in adj_edges["elements"]:
+                    neighbor = edge["vertex_b"]
+                    if neighbor not in visited and neighbor not in parents:
+                        queue.append(neighbor)
+                        parents[neighbor] = current_vertex
+
+    return parents
 
 def create_graph_search():
+    """
+    Crea la estructura base para almacenar el recorrido DFS.
+    """
     return {
-        "visited": set(),  
-        "parent": {}       
+        "visited": mp.new_map(19, 0.5),  
+        "path_to": mp.new_map(19, 0.5),  
     }
+
+def dfs_vertex(search, my_graph, vertex):
     
-def depth_first_search_with_limit(my_graph, source, limit): #implementado por inteligencia artificial para test como estructura aparte
-    graph_search = {"source": source, "visited": mp.new_map(10, 0.75)}
-    graph_search = dfs_vertex_with_limit(graph_search, my_graph, source, limit)
-    return graph_search
+    mp.put(search["visited"], vertex, True) 
+    adjacent = adjacent_edges(my_graph, vertex)
 
-def dfs_vertex_with_limit(search,my_graph, source, limit): #implementado por inteligencia artificial para test como estructura aparte
-    def auxiliar(anterior, vertex):
-        mp.put(search['visited'], vertex, {"marked": True, "edge_to": anterior})
-        elem = mp.get(my_graph['vertices'], vertex)
-        if vertex == limit:
-            return
-        for i in elem['elements']:
-            if mp.get(search['visited'], i['vertex_b']) == None:
-                auxiliar(vertex, i['vertex_b'])
+    for edge in adjacent:
+        neighbor = edge["vertex_b"]  
+        if not mp.contains(search["visited"], neighbor):  
+            mp.put(search["path_to"], neighbor, vertex)  
+            dfs_vertex(search, my_graph, neighbor)  
 
-    auxiliar(None,source)
-        
+def dfs(my_graph, source):
+    
+    search = create_graph_search()  
+    dfs_vertex(search, my_graph, source)  
     return search
+
+def find_path(parents, start_vertex, target_vertex):
+    if target_vertex not in parents:
+        return None
+    
+    path = []
+    current_vertex = target_vertex
+
+    while current_vertex is not None:
+        path.append(current_vertex)
+        current_vertex = parents[current_vertex]
+    
+    if path[-1] != start_vertex:
+        return None
+
+    return path[::-1]
