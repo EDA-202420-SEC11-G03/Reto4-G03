@@ -50,7 +50,10 @@ def print_req_2(control):
         Función que imprime la solución del Requerimiento 2 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 2
-    pass
+    id1 = input("ingrese el id del usuario 1: ")
+    id2 = input("ingrese el id del usuario 2: ")\
+        
+    print(lg.req_2(control, id1, id2))
 
 
 def print_req_3(control):

@@ -86,6 +86,7 @@ def in_degree(my_graph, key_vertex):
     if a == None:
         return None
     return a['size']
+
 def adjacent_edges(my_graph, vertex):
     """
     Retorna los vértices adyacentes (los que el vértice dado apunta).
@@ -93,3 +94,42 @@ def adjacent_edges(my_graph, vertex):
     if vertex in my_graph:
         return my_graph[vertex]  
     return []
+
+def bfs(graph, start_vertex):
+    if mp.get(graph["vertices"], start_vertex) is None:
+        return {}
+
+    visited = set()
+    queue = [start_vertex]
+    parents = {start_vertex: None}
+
+    while queue:
+        current_vertex = queue.pop(0)
+        if current_vertex not in visited:
+            visited.add(current_vertex)
+
+            adj_edges = mp.get(graph["vertices"], current_vertex)
+            if adj_edges:
+                for edge in adj_edges["elements"]:
+                    neighbor = edge["vertex_b"]
+                    if neighbor not in visited and neighbor not in parents:
+                        queue.append(neighbor)
+                        parents[neighbor] = current_vertex
+
+    return parents
+
+def find_path(parents, start_vertex, target_vertex):
+    if target_vertex not in parents:
+        return None
+    
+    path = []
+    current_vertex = target_vertex
+
+    while current_vertex is not None:
+        path.append(current_vertex)
+        current_vertex = parents[current_vertex]
+    
+    if path[-1] != start_vertex:
+        return None
+
+    return path[::-1]

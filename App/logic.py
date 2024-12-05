@@ -5,6 +5,7 @@ from DataStructures.List import array_list as ar
 import csv
 import folium
 from math import radians, sin, cos, sqrt, atan2
+
 def new_logic():
     """
     Crea el catalogo para almacenar las estructuras de datos
@@ -23,32 +24,28 @@ def agregar_amigos(catalog, info):
     for user in info:
         amigos = ar.new_list()
         
-
         lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
-        lista_seguidores = mp.get(catalog["followers"], user["USER_ID"])["elements"]
+        lista_seguidores = mp.get(catalog["followers"], float(user["USER_ID"]))["elements"]
 
         lista_seguidos = []
-        
         for seguido in lista_seguidos_arcos:
             lista_seguidos.append(seguido["vertex_b"])
 
-        
         for seguido in lista_seguidos:
             if seguido in lista_seguidores:
                 ar.add_last(amigos, seguido)
+        
         mp.put(catalog["amigos"], float(user["USER_ID"]), amigos)
-
 
 
 def load_data(catalog, filename1, filename2):
     """
     Carga los datos del reto
     """
-    import csv  # Asegúrate de importar csv
-
     with open(filename1, mode='r', encoding='latin-1') as file:
         reader = csv.DictReader(file, delimiter=';')
-        info = [row for row in reader]
+        info = [{**row, "USER_ID": int(float(row["USER_ID"]))} for row in reader]
+        
     with open(filename2, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter=';')
         conexiones = [row for row in reader]
@@ -61,10 +58,7 @@ def load_data(catalog, filename1, filename2):
     total_seguidores = 0
     catalog["followers"] = mp.new_map(100, 0.5)
     
-    
-    
     for user in info:
-        
         if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
@@ -77,13 +71,12 @@ def load_data(catalog, filename1, filename2):
             
         al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
         mp.put(catalog["info"], float(user["USER_ID"]), user)
-
-        mp.put(catalog["followers"], user["USER_ID"], ar.new_list())
+        mp.put(catalog["followers"], float(user["USER_ID"]), ar.new_list())
     
     for conexion in conexiones:
-        fd_id = str(conexion["FOLLOWED_ID"])
         follower_id = float(conexion["FOLLOWER_ID"])
         followed_id = float(conexion["FOLLOWED_ID"])
+        
         al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
         numconex += 1
         
@@ -93,21 +86,21 @@ def load_data(catalog, filename1, filename2):
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
         
-        lista = mp.get(catalog["followers"], fd_id)
+        lista = mp.get(catalog["followers"], followed_id)
         ar.add_last(lista, follower_id)
-        mp.put(catalog["followers"], fd_id, lista)
+        mp.put(catalog["followers"], followed_id, lista)
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
 
     prom_seguidores = total_seguidores / numusuarios if numusuarios > 0 else 0
-    
     ciudad_mas_usuarios = max(dicnumciudades, key=dicnumciudades.get)
     
     agregar_amigos(catalog, info)
     print(mp.value_set(catalog["amigos"]))
     
     return [numusuarios, numconex, numbasic, numpremium, prom_seguidores, ciudad_mas_usuarios]
+
 
 # Funciones de consulta sobre el catálogo
 
@@ -127,12 +120,16 @@ def req_1(catalog):
     pass
 
 
-def req_2(catalog):
+def req_2(catalog, id1, id2):
     """
     Retorna el resultado del requerimiento 2
     """
     # TODO: Modificar el requerimiento 2
-    pass
+    tablita = al.bfs(catalog["conexiones"], float(id1))
+    
+    camino = al.find_path(tablita, float(id1), float(id2))
+    
+    return camino
 
 
 def req_3(catalog, id): #Implementado por Nicorodv
