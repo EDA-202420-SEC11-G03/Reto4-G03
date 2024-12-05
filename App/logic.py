@@ -23,13 +23,15 @@ def agregar_amigos(catalog, info):
     for user in info:
         amigos = ar.new_list()
         
+
         lista_seguidos_arcos = mp.get(catalog["conexiones"]["vertices"], float(user["USER_ID"]))["elements"]
-        lista_seguidores = catalog["followers"][float(user["USER_ID"])]
-        
+        lista_seguidores = mp.get(catalog["followers"], user["USER_ID"])["elements"]
+
         lista_seguidos = []
         
         for seguido in lista_seguidos_arcos:
             lista_seguidos.append(seguido["vertex_b"])
+
         
         for seguido in lista_seguidos:
             if seguido in lista_seguidores:
@@ -57,9 +59,12 @@ def load_data(catalog, filename1, filename2):
     numpremium = 0
     dicnumciudades = {}
     total_seguidores = 0
-    catalog["followers"] = ar.new_list()
+    catalog["followers"] = mp.new_map(100, 0.5)
+    
+    
     
     for user in info:
+        
         if user["USER_TYPE"] == "basic":
             numbasic += 1
         else:
@@ -70,17 +75,13 @@ def load_data(catalog, filename1, filename2):
         else:
             dicnumciudades[user["CITY"]] = 1
             
-        if user["USER_ID"] != "" and user["USER_ID"] != None:
-            al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
-            mp.put(catalog["info"], float(user["USER_ID"]), user)
-        else:
-            al.insert_vertex(catalog["conexiones"], (user["USER_ID"]), user)
-            mp.put(catalog["info"], float(user["USER_ID"]), user)
-            
-        catalog["followers"]["USER_ID"] = []
-            
+        al.insert_vertex(catalog["conexiones"], float(user["USER_ID"]), user)
+        mp.put(catalog["info"], float(user["USER_ID"]), user)
+
+        mp.put(catalog["followers"], user["USER_ID"], ar.new_list())
     
     for conexion in conexiones:
+        fd_id = str(conexion["FOLLOWED_ID"])
         follower_id = float(conexion["FOLLOWER_ID"])
         followed_id = float(conexion["FOLLOWED_ID"])
         al.add_edge(catalog["conexiones"], follower_id, followed_id, conexion["START_DATE"])
@@ -91,11 +92,10 @@ def load_data(catalog, filename1, filename2):
         else:
             grado = mp.get(catalog["conexiones"]["in_degree"], followed_id)
             mp.put(catalog["conexiones"]["in_degree"], followed_id, grado + 1)
-            
-        if followed_id in catalog["followers"]:
-            catalog["followers"][followed_id].append(follower_id)
-        else:
-            catalog["followers"][followed_id] = [follower_id]
+        
+        lista = mp.get(catalog["followers"], fd_id)
+        ar.add_last(lista, follower_id)
+        mp.put(catalog["followers"], fd_id, lista)
         
         if mp.get(catalog["info"], followed_id) is not None:
             total_seguidores += 1
@@ -180,8 +180,6 @@ def req_4(catalog, id1, id2):
     start = get_time()
     amigos1 = mp.get(catalog["amigos"], float(id1))
     amigos2 = mp.get(catalog["amigos"], float(id2))
-    
-    print(amigos1, amigos2)
     
     amigos_comunes = ar.new_list()
     

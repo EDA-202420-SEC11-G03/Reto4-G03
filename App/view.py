@@ -66,8 +66,8 @@ def print_req_4(control):
         Función que imprime la solución del Requerimiento 4 en consola
     """
     # TODO: Imprimir el resultado del requerimiento 4
-    id1 = float(input("ingrese el id del usuario 1: "))
-    id2 = float(input("ingrese el id del usuario 2: "))
+    id1 = input("ingrese el id del usuario 1: ")
+    id2 = input("ingrese el id del usuario 2: ")
     
     print(lg.req_4(control, id1, id2))
 
