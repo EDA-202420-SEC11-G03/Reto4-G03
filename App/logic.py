@@ -171,18 +171,27 @@ def req_3(catalog, id): #Implementado por Nicorodv
     delta = delta_time(start, end)
     
     return  delta
-        
-    
-    
-    
 
-
-def req_4(catalog):
+def req_4(catalog, id1, id2):
     """
     Retorna el resultado del requerimiento 4
     """
     # TODO: Modificar el requerimiento 4
-    pass
+    start = get_time()
+    amigos1 = mp.get(catalog["amigos"], float(id1))
+    amigos2 = mp.get(catalog["amigos"], float(id2))
+    
+    print(amigos1, amigos2)
+    
+    amigos_comunes = ar.new_list()
+    
+    for amigo in amigos1["elements"]:
+        if amigo in amigos2["elements"]:
+            ar.add_last(amigos_comunes, amigo)
+
+    end = get_time()
+    delta = delta_time(start, end)
+    return [amigos_comunes, delta]
 
 
 def req_5(catalog, id, amigos):
