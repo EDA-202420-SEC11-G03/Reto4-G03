@@ -3,7 +3,7 @@ from DataStructures.Map import map_linear_probing as mp
 from DataStructures.Graph import adj_list_graph as al
 from DataStructures.List import array_list as ar
 import csv
-import folium
+#import folium
 from math import radians, sin, cos, sqrt, atan2
 def new_logic():
     """
@@ -163,37 +163,28 @@ def req_2(catalog):
 
 
 def req_3(catalog, id): #Implementado por Nicorodv
-    """
-    Retorna el resultado del requerimiento 3
-    """
     start = get_time()
-    amigos = ar.new_list()
     amigo_mas_seguido = {}
-    mayor_following = 0
-    
-    for user in catalog["followers"][float(id)]: #filtrar por seguidos/seguidores para encontrar los amigos
-        for seguido in catalog["conexiones"]["vertices"]["table"]["elements"]: 
-        #iterar sobre seguidos
-            if seguido["key"] == user:
-               ar.add_last(amigos, user)     
+    mayor_following = 0  
+    amigos = mp.get(catalog["amigos"], float(id))       
                                  
-    for amigo in amigos["elements"]:   #encontrar, dentro de los amigos, el mas popular
-        amigo_info = mp.get(catalog["info"], amigo)  
-        if amigo_info != None and amigo_info != "":
+    for amigo in amigos["elements"]:
+        info_amigo = mp.get(catalog["info"], amigo)
+        if info_amigo != None and info_amigo != "":
             followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)  
             if followers_actual > mayor_following:
                 mayor_following = followers_actual
                 amigo_mas_seguido = {
                     "id": amigo,
-                    "nombre": amigo_info["value"]["USER_NAME"],
-                    "followers": mayor_following
+                    "nombre": info_amigo["USER_NAME"],
+                    "followers": int(mayor_following/2)
                 }
               
     r = "El amigo mas popular es " + str(amigo_mas_seguido["nombre"]) + " con " + str(amigo_mas_seguido["followers"]) + " followers."
     end = get_time()
     delta = delta_time(start, end)
     
-    return  delta
+    return r, delta
 
 def req_4(catalog, id1, id2):
     """
@@ -219,6 +210,7 @@ def req_5(catalog, id, amigos):
     """
     Retorna el resultado del requerimiento 5
     """
+    inicio = get_time()
     # TODO: Modificar el requerimiento 5
     info = mp.get(catalog["conexiones"]["vertices"], float(id))
     
@@ -244,8 +236,10 @@ def req_5(catalog, id, amigos):
             amigo = mp.get(catalog["conexiones"]["information"], listaamigos["elements"][i])
             dicseguido = {"id": amigo["USER_ID"], "nombre": amigo["USER_NAME"], "seguidores": al.in_degree(catalog["conexiones"], listaamigos["elements"][i])}
             ar.add_last(lista, dicseguido)
-        i+=1        
-    return lista
+        i+=1 
+    end = get_time()     
+    delta = delta_time(inicio, end)  
+    return lista, delta
         
 def req_6(catalog, number):
     """
@@ -311,7 +305,7 @@ def req_8(catalog, latitud, longitud, radio):
             if distancia<= radio:
                 folium.Marker(
                 location=[float(infovert["LATITUDE"]), float(infovert["LONGITUDE"])],
-                popup=f"{infovert["USER_NAME"]} - {distancia:.2f} km",
+                popup = f'{infovert["USER_NAME"]} - {distancia:.2f} km',
                 icon=folium.Icon(color="green")
             ).add_to(m)
     m.save("mapa_usuarios.html")        
