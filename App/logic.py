@@ -125,11 +125,19 @@ def req_2(catalog, id1, id2):
     Retorna el resultado del requerimiento 2
     """
     # TODO: Modificar el requerimiento 2
+    start = get_time()
     tablita = al.bfs(catalog["conexiones"], float(id1))
     
     camino = al.find_path(tablita, float(id1), float(id2))
     
-    return camino
+    info1 = mp.get(catalog["info"], float(id1))
+    info2 = mp.get(catalog["info"], float(id2))
+    
+    cantidad = len(camino)
+    
+    end = get_time()
+    delta = delta_time(start, end)
+    return [cantidad, info1, camino, info2, delta]
 
 
 def req_3(catalog, id): #Implementado por Nicorodv
@@ -179,14 +187,20 @@ def req_4(catalog, id1, id2):
     amigos2 = mp.get(catalog["amigos"], float(id2))
     
     amigos_comunes = ar.new_list()
+    retorno = ar.new_list()
     
     for amigo in amigos1["elements"]:
         if amigo in amigos2["elements"]:
             ar.add_last(amigos_comunes, amigo)
 
+    for i in amigos_comunes["elements"]:
+        datos = mp.get(catalog["info"], i)
+        ar.add_last(retorno, datos)
+    
     end = get_time()
     delta = delta_time(start, end)
-    return [amigos_comunes, delta]
+    
+    return [retorno, delta]
 
 
 def req_5(catalog, id, amigos):
