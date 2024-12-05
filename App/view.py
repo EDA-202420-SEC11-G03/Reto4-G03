@@ -27,7 +27,7 @@ def load_data(control):
     Carga los datos
     """
     #TODO: Realizar la carga de datos
-    print(lg.load_data(control, "./Data/users_info_large.csv", "./Data/relationships_large.csv"))
+    print(lg.load_data(control, "./Data/users_info_90.csv", "./Data/relationships_90.csv"))
     
 
 def print_data(control, id):
@@ -41,8 +41,9 @@ def print_req_1(control):
     """
         Función que imprime la solución del Requerimiento 1 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 1
-    pass
+    x = input(print("inserte el id de origen: "))
+    y = input(print("inserte el id de destino: "))
+    print(lg.req_1(control, x, y))
 
 
 def print_req_2(control):

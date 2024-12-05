@@ -91,12 +91,39 @@ def get_data(catalog, id):
     pass
 
 
-def req_1(catalog):
-    """
-    Retorna el resultado del requerimiento 1
-    """
-    # TODO: Modificar el requerimiento 1
-    pass
+def req_1(catalog, id_origen, id_destino):
+    
+    id_origen = float(id_origen)
+    id_destino = float(id_destino)
+    start = get_time()
+    
+    graph_search = dfs.create_graph_search()    
+    
+   
+        
+    
+    
+    search = dfs.depth_first_search_with_limit(catalog["info"]["table"]["elements"], id_origen, id_destino)
+
+    if not dfs.hasPathTo(search, id_destino):
+        return "No existe un camino entre " +  {id_origen} + " y " + {id_destino}
+        
+    camino = dfs.path_to(search, id_destino)
+    r= []
+    current = camino["first"] 
+
+    while current != None:
+        user_info = mp.get(catalog["user_map"], current["info"])
+        r.append({
+            "USER_ID": user_info["value"]["USER_ID"],
+            "ALIAS": user_info["value"]["USER_NAME"],
+            "TIPO_DE_CUENTA": user_info["value"]["USER_TYPE"]
+        })
+        current = current["next"]
+    end = get_time()
+    delta = delta_time(start, end)
+    return r, len(r), delta  
+
 
 
 def req_2(catalog):
@@ -112,23 +139,19 @@ def req_3(catalog, id): #Implementado por Nicorodv
     Retorna el resultado del requerimiento 3
     """
     start = get_time()
-    info_user = mp.get(catalog["info"], float(id))
     amigos = ar.new_list()
     amigo_mas_seguido = {}
     mayor_following = 0
     
-    
-    for user in catalog["followers"][float(id)]:
+    for user in catalog["followers"][float(id)]: #filtrar por seguidos/seguidores para encontrar los amigos
         for seguido in catalog["conexiones"]["vertices"]["table"]["elements"]: 
         #iterar sobre seguidos
             if seguido["key"] == user:
                ar.add_last(amigos, user)     
-                 
-        
-                     
-    for amigo in amigos["elements"]:   
+                                 
+    for amigo in amigos["elements"]:   #encontrar, dentro de los amigos, el mas popular
         amigo_info = mp.get(catalog["info"], amigo)  
-        if amigo_info != None:
+        if amigo_info != None and amigo_info != "":
             followers_actual = mp.get(catalog["conexiones"]["in_degree"], amigo)  
             if followers_actual > mayor_following:
                 mayor_following = followers_actual
@@ -137,8 +160,7 @@ def req_3(catalog, id): #Implementado por Nicorodv
                     "nombre": amigo_info["USER_NAME"],
                     "followers": mayor_following
                 }
-            
-      
+              
     r = "El amigo mas popular es " + str(amigo_mas_seguido["nombre"]) + " con " + str(amigo_mas_seguido["followers"]) + " followers."
     end = get_time()
     delta = delta_time(start, end)

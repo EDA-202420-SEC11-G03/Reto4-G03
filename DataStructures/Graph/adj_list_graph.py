@@ -98,4 +98,47 @@ def contains_edge(my_graph, origin_vertex, destination_vertex):
     if origin_vertex in my_graph:
         # Verificar si destination está en la lista de nodos adyacentes de source
         return destination_vertex in my_graph[origin_vertex]
-    return False
+    return False    
+
+
+def dfs_vertex(search, my_graph, vertex):
+    search["visited"].add(vertex)
+    
+    for vecino in my_graph.get(vertex, []):
+        if vecino not in search["visited"]:
+            search["parent"][vecino] = vertex
+            dfs_vertex(search, my_graph, vecino)
+    
+    return search
+
+def depth_first_search(my_graph, source):
+    search = create_graph_search()
+    if source in my_graph:
+        dfs_vertex(search, my_graph, source)
+    
+    return search
+
+def create_graph_search():
+    return {
+        "visited": set(),  
+        "parent": {}       
+    }
+    
+def depth_first_search_with_limit(my_graph, source, limit): #implementado por inteligencia artificial para test como estructura aparte
+    graph_search = {"source": source, "visited": mp.new_map(10, 0.75)}
+    graph_search = dfs_vertex_with_limit(graph_search, my_graph, source, limit)
+    return graph_search
+
+def dfs_vertex_with_limit(search,my_graph, source, limit): #implementado por inteligencia artificial para test como estructura aparte
+    def auxiliar(anterior, vertex):
+        mp.put(search['visited'], vertex, {"marked": True, "edge_to": anterior})
+        elem = mp.get(my_graph['vertices'], vertex)
+        if vertex == limit:
+            return
+        for i in elem['elements']:
+            if mp.get(search['visited'], i['vertex_b']) == None:
+                auxiliar(vertex, i['vertex_b'])
+
+    auxiliar(None,source)
+        
+    return search
