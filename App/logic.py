@@ -244,7 +244,7 @@ def req_7(catalog):
     Retorna el resultado del requerimiento 7
     """
     # TODO: Modificar el requerimiento 7
-    pass
+    return catalog
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
